@@ -8,7 +8,7 @@ const axios = require('axios'); // Add axios
 const path = require('path');
 
 const app = express();
-const port = 3002; // Corrected port number
+const port = 3005;
 
 mongoose.connect('mongodb://localhost:27017/balances', { useUnifiedTopology: true });
 
@@ -57,7 +57,7 @@ app.get('/fetch-exchange-rate', async (req, res) => {
   try {
     const response = await axios.get('https://tassidicambio.bancaditalia.it/terzevalute-wf-web/rest/v1.0/dailyRates', {
       params: {
-        referenceDate: '2021-03-31', // Example date, this can be dynamic
+        referenceDate: '2021-03-31', 
         baseCurrencyIsoCode: 'USD',
         currencyIsoCode: 'EUR',
         lang: 'en'
@@ -140,7 +140,13 @@ app.post('/upload', upload.single('file'), (req, res) => {
 
 app.get('/balances', async (req, res) => {
   try {
-    const balances = await Balance.find();
+    const { accounts } = req.query;
+
+    const query = accounts ? {
+      '_id.Account': { $in: accounts.split(',') }
+    } : {};
+
+    const balances = await Balance.find(query);
     res.json(balances);
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error' });
